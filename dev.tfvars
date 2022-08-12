@@ -1,7 +1,0 @@
-project_id ="seraphic-lock-358517"
-bucket_one = "bucket-one-abdo-terra"
-bucket_two = "bucket-two-abdo-terra"
-bucket_three = "bucket-three-abdo-terra"
-dataset_one = "dataset_one"
-dataset_two = "dataset_two"
-dataset_three = "dataset_three"

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nexus
+  name: nexus-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexus
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nexus
+    spec:
+      initContainers:
+      - image: gcr.io/seraphic-lock-358517/busybox:latest
+        name: init-one
+        command: [ 'sh', '-c' , 'mkdir /nexus-data && chown -R 200 /nexus-data' ]
+        volumeMounts:
+          - mountPath: "/root"
+            name: nexus-data
+      containers:
+      - image: gcr.io/seraphic-lock-358517/nexus3:3.39.0
+        name: nexus
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+          - mountPath: "/nexus-data"
+            name: nexus-data
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+      volumes:
+      - name: nexus-data
+        persistentVolumeClaim:
+          claimName: nexus-pv-claim

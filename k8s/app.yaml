@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pthyon-app-deployment
+  name: pthyon-app-deployment
+  namespace: dev
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pthyon-app
+  template:
+    metadata:
+      labels:
+        app: pthyon-app
+    spec:
+      containers:
+      - image: gcr.io/seraphic-lock-358517/python-app:alpine
+        name: python-app 
+        ports:
+        - containerPort: 8000
+        env:
+          - name: REDIS_HOST
+            value:  redis-svc.dev.svc.cluster.local 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pthyon-app-service
+  namespace: dev
+spec:
+  ports:
+  - port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: pthyon-app
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: dev
+spec:
+  defaultBackend:
+    service:
+      name: pthyon-app-service
+      port:
+        number: 8000

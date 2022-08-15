@@ -1,13 +1,22 @@
-variable "name" {
-    type = string
+terraform {
+  # Optional attributes and the defaults function are
+  # both experimental, so we must opt in to the experiment.
+  experiments = [module_variable_optional_attrs]
 }
-variable "location" {
-    type = string
-}
+
 variable "project_id" {
     type = string
 }
-variable "storage_class" {
-    type = string
-    default = "STANDARD"
+variable "buckets_info" {
+  type =map(object({
+    name = string
+    location = string 
+    storage_class = optional(string)
+  }))
+  
+}
+locals {
+  bucket = defaults(var.buckets_info,{
+    storage_class = "STANDARD"
+  })
 }

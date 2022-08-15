@@ -6,73 +6,96 @@ module "network" {
   subnet_cidr = "10.0.0.0/16"
   subnet_region = "us-central1"
 }
-# module "dataset_one" {
-#   source = "./big-query"
-#   project_id = var.project_id
-#   name  = "dataset_one"
-#   location = "us-central1"
-#   id = "dataset_one_abdo"
-#   user_by_email = module.sa-bq-reader-writer.sa-email
-#   role = "OWNER"
+module "datasets" {
+  source = "./BigQuery"
+  project_id = var.project_id
+  datasets = {
+    "dataset_one" = {
+      id = "dataset_one_abdo"
+      location = "us-central1"
+      name = "dataset_one"
+      user_by_email = "${module.sa.sa-email[1]}"
+      role = "OWNER"
+    },"dataset_two" = {
+      id = "dataset_two_abdo"
+      location = "us-central1"
+      name = "dataset_two"
+      user_by_email = "${module.sa.sa-email[1]}"
+      role = "OWNER"
+    },
+    "dataset_three" = {
+      id = "dataset_three_abdo"
+      location = "us-central1"
+      name = "dataset_three"
+      user_by_email = "${module.sa.sa-email[1]}"
+      role = "OWNER"
+    }
+  }
+}
+# module "datasets-members" {
+#     source = "./BigQuery-member"
+#     project_id = var.project_id
+#     bq-members = {
+#       "one" = {
+#         dataset_id = module.datasets.datasets_info.dataset_one.id
+#         member = "serviceAccount:${module.sa.sa-email[1]}"
+#         role = "roles/bigquery.dataEditor"
+#       },
+#       "two" = {
+#         dataset_id = module.datasets.datasets_info.dataset_two.id
+#         member = "serviceAccount:${module.sa.sa-email[1]}"
+#         role = "roles/bigquery.dataEditor"
+#       },
+#       "three" = {
+#         dataset_id = module.datasets.datasets_info.dataset_three.id
+#         member = "serviceAccount:${module.sa.sa-email[1]}"
+#         role = "roles/bigquery.dataEditor"
+#       }
+#     }
+#     depends_on = [
+#       module.datasets
+#     ]
 # }
-# module "dataset_two" {
-#   source = "./big-query"
-#   project_id = var.project_id
-#   name  = "dataset_two"
-#   location = "us-central1"
-#   id = "dataset_two_abdo"
-#   user_by_email = module.sa-bq-reader-writer.sa-email
-#   role = "OWNER"
-# }
-# module "dataset_three" {
-#   source = "./big-query"
-#   project_id = var.project_id
-#   name  = "dataset_three"
-#   location = "us-central1"
-#   id = "dataset_three_abdo"
-#   user_by_email = module.sa-bq-reader-writer.sa-email
-#   role = "OWNER"
-# }
-# module "bucket_one" {
-#   source = "./bucket"
-#   project_id = var.project_id
-#   name  = var.bucket_one
-#   location = "us-central1"
-#   storage_class = "STANDARD"
-# }
-# module "bucket_two" {
-#   source = "./bucket"
-#   project_id = var.project_id
-#   name  = var.bucket_two
-#   location = "us-central1"
-#   storage_class = "STANDARD"
-# }
-
-# module "bucket_three" {
-#   source = "./bucket"
-#   project_id = var.project_id
-#   name  = var.bucket_three
-#   location = "us-central1"
-#   storage_class = "STANDARD"
-# }
-# module "bucket-policy-one" {
-#   source = "./bucket-policy"
-#   bucket = var.bucket_one
-#   role = "roles/storage.objectViewer"
-#   members = ["serviceAccount:${module.sa-buckets-reader.sa-email}"]
-# }
-# module "bucket-policy-two" {
-#   source = "./bucket-policy"
-#   bucket = var.bucket_two
-#   role = "roles/storage.objectViewer"
-#   members = ["serviceAccount:${module.sa-buckets-reader.sa-email}"]
-# }
-# module "bucket-policy-three" {
-#   source = "./bucket-policy"
-#   bucket = var.bucket_three
-#   role = "roles/storage.objectViewer"
-#   members = ["serviceAccount:${module.sa-buckets-reader.sa-email}"]
-# }
+module "buckets" {
+  source = "./bucket"
+  project_id = var.project_id
+  buckets_info = {
+    "bucket_one" = {
+      location = "us-central1"
+      name = var.bucket_one
+    },
+    "bucket_two" = {
+      location = "us-central1"
+      name = var.bucket_two
+    },
+    "bucket_three" = {
+      location = "us-central1"
+      name = var.bucket_three
+    }
+  }
+}
+module "bucket-members" {
+  source = "./bucket-member"
+  bucket_members = {
+    "one" = {
+      bucket = module.buckets.buckets_info.bucket_one.name
+      member =  "serviceAccount:${module.sa.sa-email[0]}"
+      role = "roles/storage.objectViewer"
+    },
+    "two" = {
+      bucket = module.buckets.buckets_info.bucket_two.name
+      member =  "serviceAccount:${module.sa.sa-email[0]}"
+      role = "roles/storage.objectViewer"
+    }, "three" = {
+      bucket = module.buckets.buckets_info.bucket_three.name
+      member =  "serviceAccount:${module.sa.sa-email[0]}"
+      role = "roles/storage.objectViewer"
+    }
+  }
+  depends_on = [
+    module.buckets
+  ]
+}
 module "vm" {
   source = "./compute_machine"
   project_id = var.project_id
@@ -85,7 +108,7 @@ module "vm" {
   boot_disk_size = "20"
   vpc_name = module.network.vpc_name
   subnet_name = module.network.subnet_name
-  sa-email = module.sa-buckets-reader.sa-email
+  sa-email = module.sa.sa-email[0]
   startup-script = <<EOT
 #!/bin/bash
 sudo yum install kubectl -y
@@ -109,31 +132,30 @@ sudo usermod -aG docker abdurrhman
 sudo -i
 gcloud auth configure-docker
 EOT
+
+  depends_on = [
+    module.network, module.sa 
+  ]
 }
 
-module "sa-buckets-reader" {
+module "sa" {
   source = "./service_account"
   project_id = var.project_id
-  name  = "sa-buckets-reader"
-  id = "sa-buckets-reader"
+  ids = [ "sa-buckets-reader" , "sa-bq-reader-writer" , "sa-gcr-reader"]
+  names =[ "sa-buckets-reader", "sa-bq-reader-writer" , "sa-gcr-reader" ]
 }
-module "sa-bq-reader-writer" {
-  source = "./service_account"
+module "iam_member" {
   project_id = var.project_id
-  name  = "sa-bq-reader-writer"
-  id = "sa-bq-reader-writer"
-}
-module "sa-gcr-reader" {
-  source = "./service_account"
-  project_id = var.project_id
-  name  = "sa-gcr-reader"
-  id = "sa-gcr-reader"
-}
-module "gcr-binding" {
-  project_id = var.project_id
-  source = "./iam-binding"
-  role = "roles/storage.objectViewer"
-  members = ["serviceAccount:${module.sa-gcr-reader.sa-email}"]
+  source = "./iam-member"
+  iam_members = {
+    "sa-objectViewer" = {
+      member = "serviceAccount:${module.sa.sa-email[2]}"
+      role = "roles/storage.objectViewer"
+    }
+  }
+  depends_on = [
+    module.sa
+  ]
 }
 module "gke-access-role-to-get-credential" {
   source = "./iam-role"
@@ -147,11 +169,12 @@ module "gke-access-role-to-get-credential" {
     "container.clusters.getCredentials",
     "container.clusters.impersonate",
   ]
+  
 }
 module "name" {
   source = "./gke"
   cluster-name = "mycluster"
-  node-count = 1
+  node-count = 0
   node-machine-type = "e2-standard-2"
   #node-machine-type = "e2-micro"
   region = "us-central1"
@@ -166,5 +189,5 @@ module "name" {
   node_boot_disk_type = "pd-standard"
   os_image = "COS_CONTAINERD"
   authorized-network-cidr = module.network.subnet_cidr
-  service-account-email = module.sa-gcr-reader.sa-email
+  service-account-email = module.sa.sa-email[2]
 }

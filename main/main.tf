@@ -83,7 +83,7 @@ module "GKE" {
       auto_repair = true
       auto_upgrade = true
       max_surge = 1
-      max_unavailable = 0
+      max_unavailable = 1
       node_config = {
         disk_size_gb = 30
         disk_type = "pd-standard"
@@ -99,7 +99,7 @@ module "GKE" {
     ]
         service_account = module.sa.sa-email[2]
       }
-      node_count = 1
+      node_count = 2
       node_locations = [ "us-central1-c", "us-central1-f" ]
     }
   }
@@ -122,10 +122,10 @@ module "iam_member" {
       member = "serviceAccount:${module.sa.sa-email[2]}"
       role = "roles/storage.objectViewer"
     },
-    "container-admin" = {
-      member = "serviceAccount:${module.sa.sa-email[2]}"
-      role = "roles/container.admin"
-    }
+    # "container-admin" = {
+    #   member = "serviceAccount:${module.sa.sa-email[2]}"
+    #   role = "roles/container.admin"
+    # }
   }
   depends_on = [
     module.sa
@@ -218,27 +218,3 @@ module "gke-access-role-to-get-credential" {
   ]
   
 }
-
-# module "nat" {
-#   source = "../modules/nat"
-#   nat_details = {
-#     "nat_one" = {
-#       nat_ip_allocate_option = "AUTO_ONLY"
-#       nat_name = "my-nat"
-#       project_id = var.project_id
-#       source_ip_ranges_to_nat = ["PRIMARY_IP_RANGE"]
-#       source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
-#     }
-#   }
-#   routers = {
-#     "router_one" = {
-#       bgp_asn = 64514
-#       subnet_name = module.network.subnet_details.vpc_one-mysubnet.name
-#       subnet_region =  module.network.subnet_details.vpc_one-mysubnet.region
-#       vpc_id = module.network.vpc_details.vpc_one.id
-#     }
-#   }
-#   depends_on = [
-#     module.network
-#   ]
-# }

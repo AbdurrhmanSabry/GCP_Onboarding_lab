@@ -43,12 +43,6 @@ locals {
       key    = key
       node_locations = pool.node_locations
       node_count = pool.node_count 
-      # node_config.image_type = pool.node_config.image_type 
-      # node_config.machine_type = pool.node_config.machine_type
-      # node_config.disk_size_gb = pool.node_config.disk_size_gb
-      # node_config.service_account = pool.node_config.service_account 
-      # node_config.disk_type =  pool.node_config.disk_type
-      # node_config.oauth_scopes = pool.node_config.oauth_scopes
       node_config = pool.node_config
       auto_repair  = pool.auto_repair
       auto_upgrade = pool.auto_upgrade
@@ -67,12 +61,6 @@ locals {
       pool_key  = pair[1].key
       node_locations = pair[1].node_locations
       node_count = pair[1].node_count 
-      # node_config.image_type = pair[1].node_config.image_type 
-      # node_config.machine_type = pair[1].node_config.machine_type
-      # node_config.disk_size_gb = pair[1].node_config.disk_size_gb
-      # node_config.service_account = pair[1].node_config.service_account 
-      # node_config.disk_type =  pair[1].node_config.disk_type
-      # node_config.oauth_scopes = pair[1].node_config.oauth_scopes
       node_config = pair[1].node_config
       auto_repair  = pair[1].auto_repair
       auto_upgrade = pair[1].auto_upgrade

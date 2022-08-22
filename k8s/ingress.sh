@@ -1,3 +1,10 @@
+#!/bin/bash
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+helm install my-release nginx-stable/nginx-ingress --set controller.image.repository=gcr.io/seraphic-lock-358517/ingress 
+sleep 60
+export NGINX_INGRESS_IP=$(kubectl get service my-release-nginx-ingress -o jsonpath={.status.loadBalancer.ingress[].ip})
+echo $NGINX_INGRESS_IP
 cat <<EOF > ingress-resource.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -53,3 +60,4 @@ spec:
             port:
               number: 8000
 EOF
+kubectl apply -f ingress-resource.yaml

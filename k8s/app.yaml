@@ -23,6 +23,13 @@ spec:
         env:
           - name: REDIS_HOST
             value:  redis-svc.dev.svc.cluster.local 
+        resources:
+          requests:
+            memory: "300Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -51,6 +58,13 @@ spec:
     image: gcr.io/seraphic-lock-358517/redis:latest
     ports:
       - containerPort: 6379
+    resources:
+      requests:
+        memory: "300Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
 ---
 apiVersion: v1
 kind: Service

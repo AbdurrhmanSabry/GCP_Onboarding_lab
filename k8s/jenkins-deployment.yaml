@@ -4,6 +4,7 @@ metadata:
   labels:
     app: jenkins
   name: jenkins-deployment
+  namespace: shared-services
 spec:
   replicas: 1
   selector:
@@ -55,3 +56,36 @@ spec:
       - name: jenkins-data
         persistentVolumeClaim:
           claimName: jenkins-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jenkins
+  name: jenkins-svc
+  namespace: shared-services
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+    name: "http"
+  - port: 50000
+    targetPort: 50000
+    name: "jnlp"
+    protocol: "TCP"
+  selector:
+    app: jenkins
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-pv-claim
+  namespace: shared-services
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

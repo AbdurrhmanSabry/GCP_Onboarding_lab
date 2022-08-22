@@ -1,9 +1,22 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nexus-pv-claim
+  namespace: shared-services
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: nexus
   name: nexus-deployment
+  namespace: shared-services
 spec:
   replicas: 1
   selector:
@@ -15,13 +28,8 @@ spec:
       labels:
         app: nexus
     spec:
-      initContainers:
-      - image: gcr.io/seraphic-lock-358517/busybox:latest
-        name: init-one
-        command: [ 'sh', '-c' , 'mkdir /nexus-data && chown -R 200 /nexus-data' ]
-        volumeMounts:
-          - mountPath: "/root"
-            name: nexus-data
+      securityContext:
+        fsGroup: 200
       containers:
       - image: gcr.io/seraphic-lock-358517/nexus3:3.39.0
         name: nexus
@@ -37,7 +45,31 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "1000m"
+        # readinessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8081
+        #   periodSeconds: 1
+        #   timeoutSeconds: 1
+        #   successThreshold: 1
+        #   failureThreshold: 10     
       volumes:
       - name: nexus-data
         persistentVolumeClaim:
           claimName: nexus-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nexus
+  name: nexus-svc
+  namespace: shared-services
+spec:
+  ports:
+  - port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: nexus
+  type: NodePort
